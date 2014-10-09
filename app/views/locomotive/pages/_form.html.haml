@@ -39,6 +39,8 @@
 
   = f.input :listed, as: :'Locomotive::Toggle', input_html: { class: 'simple-toggle' }
 
+  = f.input :authentication_required, as: :'Locomotive::Toggle', input_html: { class: 'simple-toggle' }
+
   = f.input :redirect, as: :'Locomotive::Toggle', wrapper_html: { style: "#{'display: none' if @page.templatized? || !@page.default_response_type?}" }
 
   = f.input :redirect_url, required: true, wrapper_html: { style: "#{'display: none' unless @page.redirect?}" }

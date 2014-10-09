@@ -20,6 +20,12 @@ module Locomotive
       else
         @page ||= self.locomotive_page(path)
 
+        if request.fullpath.downcase().include?("products")
+          @page.authentication_required = true
+        end
+
+        render_access_denied_error and return if @page.authentication_required? && !signed_in?
+
         if @page.present? && @page.redirect?
           self.redirect_to_locomotive_page and return
         end
@@ -92,6 +98,10 @@ module Locomotive
     #
     def page_status
       @page.not_found? ? :not_found : :ok
+    end
+
+    def render_access_denied_error
+      render :template => "/locomotive/errors/access_denied", :layout => false
     end
 
     # Get the Locomotive page matching the request and scoped by the current Locomotive site

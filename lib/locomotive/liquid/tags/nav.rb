@@ -77,7 +77,7 @@ module Locomotive
             @site.pages.fullpath(@source).minimal_attributes(@options[:add_attributes]).first
           end).children_with_minimal_attributes(@options[:add_attributes]).to_a
 
-          children.delete_if { |p| !include_page?(p) }
+          children.delete_if { |p| !include_page?(p, context) }
         end
 
         # Returns a list element, a link to the page and its children
@@ -91,7 +91,7 @@ module Locomotive
           link_options = caret = ''
           href = File.join('/', @site.localized_page_fullpath(page))
 
-          if render_children_for_page?(page, depth) && bootstrap?
+          if render_children_for_page?(page, depth, context) && bootstrap?
             css           += ' dropdown'
             link_options  = %{ class="dropdown-toggle" data-toggle="dropdown"}
             href          = '#'
@@ -106,15 +106,15 @@ module Locomotive
           output.strip
         end
 
-        def render_children_for_page?(page, depth)
-          depth.succ <= @options[:depth].to_i && page.children.reject { |c| !include_page?(c) }.any?
+        def render_children_for_page?(page, depth, context)
+          depth.succ <= @options[:depth].to_i && page.children.reject { |c| !include_page?(c, context) }.any?
         end
 
         # Recursively creates a nested unordered list for the depth specified
         def render_entry_children(context, page, depth)
           output = %{}
 
-          children = page.children_with_minimal_attributes(@options[:add_attributes]).reject { |c| !include_page?(c) }
+          children = page.children_with_minimal_attributes(@options[:add_attributes]).reject { |c| !include_page?(c, context) }
           if children.present?
             output = %{<ul id="#{@options[:id]}-#{page.slug.to_s.dasherize}" class="#{bootstrap? ? 'dropdown-menu' : ''}">}
             children.each do |c, page|
@@ -142,8 +142,8 @@ module Locomotive
         end
 
         # Determines whether or not a page should be a part of the menu
-        def include_page?(page)
-          if !page.listed? || page.templatized? || !page.published?
+        def include_page?(page, context)
+          if !page.listed? || page.templatized? || !page.published? || (page.authentication_required? && !context.registers[:controller].signed_in?)
             false
           elsif @options[:exclude]
             (page.fullpath =~ @options[:exclude]).nil?
